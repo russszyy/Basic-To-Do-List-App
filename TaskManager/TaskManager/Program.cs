@@ -1,28 +1,33 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text.RegularExpressions;
-using System.Threading;
+
+public enum TaskStatus
+{
+    Incomplete,
+    Completed
+}
 
 public class Task
 {
     public string Description { get; }
-    public bool Completed { get; private set; }
+    public TaskStatus Status { get; private set; }
 
     public Task(string description)
     {
         Description = description;
-        Completed = false;
+        Status = TaskStatus.Incomplete;
     }
 
     public void MarkAsComplete()
     {
-        Completed = true;
+        Status = TaskStatus.Completed;
     }
 
     public override string ToString()
     {
-        string status = Completed ? "[x]" : "[ ]";
+        string status = Status == TaskStatus.Completed ? "[x]" : "[ ]";
         return $"{status} {Description}";
     }
 }
@@ -107,7 +112,7 @@ public class TodoList
     {
         lock (lockObject)
         {
-            tasks.RemoveAll(task => task.Completed);
+            tasks.RemoveAll(task => task.Status == TaskStatus.Completed);
             SaveTasksToFile("tasks.txt");
             Console.WriteLine("Completed tasks deleted successfully");
         }
@@ -135,7 +140,7 @@ public class TodoList
         {
             foreach (Task task in tasks)
             {
-                writer.WriteLine($"{task.Description},{task.Completed}");
+                writer.WriteLine($"{task.Description},{task.Status}");
             }
         }
     }
@@ -152,9 +157,9 @@ public class TodoList
                 {
                     string[] parts = line.Split(',');
                     string description = parts[0];
-                    bool completed = bool.Parse(parts[1]);
+                    TaskStatus status = (TaskStatus)Enum.Parse(typeof(TaskStatus), parts[1]);
                     Task task = new Task(description);
-                    if (completed)
+                    if (status == TaskStatus.Completed)
                     {
                         task.MarkAsComplete();
                     }
